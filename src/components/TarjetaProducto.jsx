@@ -7,7 +7,7 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
 
   return (
     <article className="card h-100">
-    {/* Estado Stock*/}
+    {/* Imagen*/}
       <img
         src={producto.imagen || "https://placeholder.com"}
         alt={producto.nombre}
