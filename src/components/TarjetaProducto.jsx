@@ -6,8 +6,8 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
   const estaAgotado = producto.stock === 0;
 
   return (
-    //Imagen 
     <article className="card h-100">
+    {/* Estado Stock*/}
       <img
         src={producto.imagen || "https://placeholder.com"}
         alt={producto.nombre}
@@ -30,7 +30,7 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
         <p className="product-price">{formatearPrecio(producto.precio)}</p>
 
         {/* BOTONES */}
-        
+
         {/* Boton detalle */}
         <div className="card-actions">
           <Link to={`/productos/${producto.codigo}`} className="btn-secondary">
