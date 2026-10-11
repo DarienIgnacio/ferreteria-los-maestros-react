@@ -4,6 +4,7 @@ import PiePagina from "./components/PiePagina";
 import Inicio from "./pages/Inicio";
 import NoEncontrada from "./pages/NoEncontrada";
 import Productos from "./pages/Productos";
+import DetalleProducto from "./pages/DetalleProducto";
 
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Routes>          
           <Route path="/" element={<Inicio />} />
           <Route path="/productos" element={<Productos />} />
+          <Route path="/productos/:codigo" element={<DetalleProducto />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>     
        </main>

@@ -1,53 +1,73 @@
 // src/components/TarjetaProducto.jsx
+import { Card, Button, Badge } from "react-bootstrap"; // <-- Asegúrate de que Card esté aquí
 import { Link } from "react-router-dom";
 
 function TarjetaProducto({ producto, onAgregarCarrito }) {
   const formatearPrecio = (valor) => `$${valor.toLocaleString("es-CL")}`;
-  const estaAgotado = producto.stock === 0;
 
   return (
-    <article className="card h-100">
-    {/* Imagen*/}
-      <img
-        src={producto.imagen || "https://placeholder.com"}
-        alt={producto.nombre}
-        className="card-img-top"
-      />
-      
-      {/* Estado Stock*/}
-      <div className="card-body">
-        <div className="status-badges">
-          <span className="badge-secondary">{producto.categoria}</span>
-          {!estaAgotado && producto.stock <= producto.stockCritico && (
-            <span className="badge-danger">¡Últimas unidades!</span>
+    <Card className="h-100 shadow-sm border-0">
+      {/* Imagen*/}
+      <div
+        className="text-center bg-light p-2 rounded-top"
+        style={{
+          height: "180px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Card.Img
+          variant="top"
+          src={producto.imagen || "https://via.placeholder.com/300x200?text=Ferreter%C3%ADa"}
+          alt={producto.nombre}
+          className="img-fluid"
+          style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
+        />
+      </div>
+
+        {/* Estado Stock*/}
+      <Card.Body className="d-flex flex-column">
+        <div className="mb-2">
+          <Badge bg="secondary" className="me-1">
+            {producto.categoria}
+          </Badge>
+          {producto.stock > 0 && producto.stock <= producto.stockCritico && (
+            <Badge bg="danger">¡Últimas unidades!</Badge>
           )}
-          {estaAgotado && <span className="badge-dark">Agotado</span>}
+          {producto.stock === 0 && <Badge bg="dark">Agotado</Badge>}
         </div>
 
-        {/* Info producto */}
-        <h2 className="product-title">{producto.nombre}</h2>
-        <p className="product-description">{producto.descripcion}</p>
-        <p className="product-price">{formatearPrecio(producto.precio)}</p>
+         {/* Info producto */}
+        <Card.Title className="h6 text-truncate" title={producto.nombre}>{producto.nombre}</Card.Title>
+        <Card.Text className="small text-muted flex-grow-1 text-truncate-2">{producto.descripcion}</Card.Text>
+        <div className="my-2 fw-bold text-primary fs-5">{formatearPrecio(producto.precio)}</div>
 
-        {/* BOTONES */}
-
+          {/* BOTONES */}
+        
         {/* Boton detalle */}
-        <div className="card-actions">
-          <Link to={`/productos/${producto.codigo}`} className="btn-secondary">
+        <div className="d-grid gap-2">
+          <Button
+            as={Link}
+            to={`/productos/${producto.codigo}`}
+            variant="outline-secondary"
+            size="sm"
+          >
             Ver Detalle
-          </Link><br></br>
-
+          </Button>
+          
           {/* Boton agregar (con/sin stock)*/}
-          <button
-            className="btn-primary"
-            disabled={estaAgotado}
+          <Button
+            variant={producto.stock === 0 ? "secondary" : "primary"}
+            size="sm"
+            disabled={producto.stock === 0}
             onClick={() => onAgregarCarrito(producto)}
           >
-            {estaAgotado ? "Sin Stock" : "Añadir al Carrito"}
-          </button><br></br>
+            {producto.stock === 0 ? "Sin Stock" : "Añadir al Carrito"}
+          </Button>
         </div>
-      </div>
-    </article>
+      </Card.Body>
+    </Card>
   );
 }
 
