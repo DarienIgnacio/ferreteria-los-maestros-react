@@ -1,4 +1,3 @@
-// src/pages/DetalleProducto.jsx
 import { useParams, Link } from "react-router-dom";
 import { Container, Row, Col, Badge, Button, Card } from "react-bootstrap";
 import { obtenerProductos } from "../utils/persistenciaProductos";

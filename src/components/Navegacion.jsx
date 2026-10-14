@@ -11,12 +11,14 @@ function Navegacion({ totalCarrito = 0 }) {
           <Nav className="me-auto">
             <Nav.Link as={NavLink} to="/">Inicio</Nav.Link>
             <Nav.Link as={NavLink} to="/productos">Productos</Nav.Link>
-            <Nav.Link as={NavLink} to="/ofertas">Ofertas</Nav.Link>
             <Nav.Link as={NavLink} to="/nosotros">Nosotros</Nav.Link>
             <Nav.Link as={NavLink} to="/contacto">Contacto</Nav.Link>
             <Nav.Link as={NavLink} to="/carrito" className="btn btn-success btn-sm px-3 text-white fw-bold ms-md-2">
               🛒 Carrito <Badge bg="light" text="dark">{totalCarrito}</Badge>
             </Nav.Link>
+            <Nav.Link as={NavLink} to="/login">Login</Nav.Link>
+            <Nav.Link as={NavLink} to="/registro">Registrarse</Nav.Link>
+
           </Nav>
         </Navbar.Collapse>
       </Container>

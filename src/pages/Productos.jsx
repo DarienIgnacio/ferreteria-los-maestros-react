@@ -1,4 +1,3 @@
-// src/pages/Productos.jsx
 import { useState, useEffect } from "react";
 import TarjetaProducto from "../components/TarjetaProducto";
 import { obtenerProductos } from "../utils/persistenciaProductos";

@@ -1,4 +1,3 @@
-// src/components/TarjetaProducto.jsx
 import { Card, Button, Badge } from "react-bootstrap"; // <-- Asegúrate de que Card esté aquí
 import { Link } from "react-router-dom";
 

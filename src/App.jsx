@@ -5,6 +5,8 @@ import Inicio from "./pages/Inicio";
 import NoEncontrada from "./pages/NoEncontrada";
 import Productos from "./pages/Productos";
 import DetalleProducto from "./pages/DetalleProducto";
+import Login from "./pages/Login";
+import Registro from "./pages/Registro";
 
 
 function App() {
@@ -16,6 +18,8 @@ function App() {
           <Route path="/" element={<Inicio />} />
           <Route path="/productos" element={<Productos />} />
           <Route path="/productos/:codigo" element={<DetalleProducto />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<Registro />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>     
        </main>
