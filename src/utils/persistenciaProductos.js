@@ -16,11 +16,16 @@ export function obtenerProductos() {
   }
 }
 
+// GUARDAR: Guardar el arreglo completo de productos
+export function guardarProductos(productos) {
+  localStorage.setItem(CLAVE_LOCALSTORAGE, JSON.stringify(productos));
+}
+
 // CREATE: Guardar un nuevo producto
 export function crearProducto(nuevoProducto) {
   const listaActual = obtenerProductos();
   const listaActualizada = [...listaActual, nuevoProducto];
-  localStorage.setItem(CLAVE_LOCALSTORAGE, JSON.stringify(listaActualizada));
+  guardarProductos(listaActualizada);
   return listaActualizada;
 }
 
@@ -30,7 +35,7 @@ export function actualizarProducto(codigo, datosActualizados) {
   const listaActualizada = listaActual.map((prod) =>
     prod.codigo === codigo ? { ...prod, ...datosActualizados } : prod
   );
-  localStorage.setItem(CLAVE_LOCALSTORAGE, JSON.stringify(listaActualizada));
+  guardarProductos(listaActualizada);
   return listaActualizada;
 }
 
@@ -38,6 +43,6 @@ export function actualizarProducto(codigo, datosActualizados) {
 export function eliminarProducto(codigo) {
   const listaActual = obtenerProductos();
   const listaActualizada = listaActual.filter((prod) => prod.codigo !== codigo);
-  localStorage.setItem(CLAVE_LOCALSTORAGE, JSON.stringify(listaActualizada));
+  guardarProductos(listaActualizada);
   return listaActualizada;
 }
