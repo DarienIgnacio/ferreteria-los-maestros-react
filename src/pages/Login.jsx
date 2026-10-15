@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { validarCorreo, validarClave, DOMINIOS_PERMITIDOS } from "../utils/validaciones";
+import { validarCorreo, validarClave } from "../utils/validaciones";
 import { autenticarUsuario } from "../utils/persistenciaUsuarios";
 
 const datosIniciales = { correo: "", clave: "" };
 
-function Login() {
+// 1. Recibimos la prop onLoginAdmin desde App.jsx
+function Login({ onLoginAdmin }) {
   const [datos, setDatos] = useState(datosIniciales);
   const [errores, setErrores] = useState({});
   const [errorLogin, setErrorLogin] = useState("");
@@ -43,10 +44,26 @@ function Login() {
       return;
     }
 
-    setMensajeExito(`¡Bienvenido/a, ${resultado.usuario.nombre}! Redirigiendo...`);
-    setTimeout(() => {
-      navigate("/");
-    }, 1500);
+    // 2. Verificar si es Administrador (por rol o correo)
+    const esUsuarioAdmin = 
+      resultado.usuario?.rol === "admin" || 
+      resultado.usuario?.correo === "admin@ferreteria.cl" ||
+      datos.correo === "admin@ferreteria.cl";
+
+    if (esUsuarioAdmin) {
+      if (onLoginAdmin) onLoginAdmin(); // Notificamos a App.jsx que inició como admin
+      setMensajeExito(`¡Bienvenido/a Administrador/a! Redirigiendo al panel...`);
+      
+      setTimeout(() => {
+        navigate("/admin"); // REDIRECCIÓN AL PANEL ADMIN
+      },500);
+    } else {
+      setMensajeExito(`¡Bienvenido/a, ${resultado.usuario.nombre}! Redirigiendo...`);
+      
+      setTimeout(() => {
+        navigate("/"); // REDIRECCIÓN AL INICIO CLIENTE
+      }, 1500);
+    }
   };
 
   return (

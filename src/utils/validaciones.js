@@ -5,7 +5,8 @@ export const DOMINIOS_PERMITIDOS = [
   "outlook.com",
   "duoc.cl",
   "duocuc.cl",
-  "profesor.duoc.cl"
+  "profesor.duoc.cl",
+  "ferreteria.cl"
 ];
 
 // 1. Validar Nombre: solo letras, tildes, espacios y entre 3 y 80 caracteres
