@@ -1,13 +1,31 @@
+// src/utils/persistenciaUsuarios.js
+
 const CLAVE_USUARIOS = "usuarios_ferreteria_v1";
 
-// Obtener lista de usuarios registrados
+// Usuario Admin predeterminado del sistema
+const adminInicial = [
+  {
+    nombre: "Administrador",
+    correo: "admin@ferreteria.cl",
+    clave: "admin123",
+    rol: "admin"
+  }
+];
+
+// Obtener lista de usuarios registrados (o inicializar con el Admin)
 export function obtenerUsuarios() {
   const guardados = localStorage.getItem(CLAVE_USUARIOS);
-  if (!guardados) return [];
+  
+  if (!guardados) {
+    // Guarda el admin inicial si no hay ningún usuario en localStorage
+    localStorage.setItem(CLAVE_USUARIOS, JSON.stringify(adminInicial));
+    return adminInicial;
+  }
+
   try {
     return JSON.parse(guardados);
   } catch (e) {
-    return [];
+    return adminInicial;
   }
 }
 
