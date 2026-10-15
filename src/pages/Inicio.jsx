@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import TarjetaProducto from "../components/TarjetaProducto";
 import { obtenerProductos } from "../utils/persistenciaProductos";
 
-function Inicio({ onAgregarCarrito }) {
+function Inicio() {
   const productos = obtenerProductos();
   const destacados = productos.slice(0, 4);
 
@@ -32,7 +32,7 @@ function Inicio({ onAgregarCarrito }) {
         <Row className="g-3">
           {destacados.map((prod) => (
             <Col key={prod.codigo} xs={12} sm={6} md={3}>
-              <TarjetaProducto producto={prod} onAgregarCarrito={onAgregarCarrito} />
+              <TarjetaProducto producto={prod} />
             </Col>
           ))}
         </Row>
