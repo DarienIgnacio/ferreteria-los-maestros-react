@@ -1,66 +1,74 @@
-import { useState, useEffect } from "react";
+// src/pages/Productos.jsx
+import { useState } from "react";
+import { Container, Row, Col, Alert } from "react-bootstrap";
 import TarjetaProducto from "../components/TarjetaProducto";
+import FiltrosCatalogo from "../components/FiltrosCatalogo";
 import { obtenerProductos } from "../utils/persistenciaProductos";
 
 function Productos({ onAgregarCarrito }) {
-  const [listaProductos, setListaProductos] = useState([]);
-  const [categoriaSel, setCategoriaSel] = useState("Todas");
-  const [soloStock, setSoloStock] = useState(false);
+  const productos = obtenerProductos();
+  const [categoria, setCategoria] = useState("");
+  const [filtroStock, setFiltroStock] = useState("todos"); 
 
-  useEffect(() => {
-    setListaProductos(obtenerProductos());
-  }, []);
+  // Extraer lista única de categorías
+  const categorias = [];
+  productos.forEach((p) => {
+    if (p.categoria && !categorias.includes(p.categoria)) {
+      categorias.push(p.categoria);
+    }
+  });
 
-  const productosFiltrados = listaProductos.filter((prod) => {
-    const coincideCategoria =
-      categoriaSel === "Todas" || prod.categoria === categoriaSel;
-    const coincideStock = soloStock ? prod.stock > 0 : true;
+  // Filtrado directo por Categoría y Disponibilidad de Stock
+  const productosFiltrados = productos.filter((prod) => {
+    const coincideCategoria = categoria ? prod.categoria === categoria : true;
+
+    let coincideStock = true;
+    if (filtroStock === "disponible") {
+      coincideStock = prod.stock > 0;
+    } else if (filtroStock === "agotado") {
+      coincideStock = prod.stock === 0;
+    }
+
     return coincideCategoria && coincideStock;
   });
 
   return (
-    <main className="container py-4">
-      <header className="page-header">
-        <h1>Catálogo de Productos</h1>
-        <p>Encuentra los materiales y herramientas disponibles en tiempo real.</p><br></br>
-      </header>
+    <Container className="py-4">
+      <div className="border-bottom pb-3 mb-4">
+        <h1 className="h2 text-dark">Catálogo de Productos</h1>
+        <p className="text-muted mb-0">
+          Filtra nuestras herramientas por categoría y disponibilidad en tienda.
+        </p>
+      </div>
 
-      {/* Barra de Filtros */}
-      <section className="filter-bar">
-        <div className="filter-group">
-          <label htmlFor="filtroCategoria">Filtrar por Categoría</label>
-          <select id="filtroCategoria" value={categoriaSel} onChange={(e) => setCategoriaSel(e.target.value)} className="form-select">
-            <option value="Todas">Todas las categorías</option>
-            <option value="Herramientas">Herramientas</option>
-            <option value="Materiales de Construcción">Materiales de Construcción</option>
-            <option value="Herramientas Eléctricas">Herramientas Eléctricas</option>
-            <option value="Pinturas">Pinturas</option>
-          </select>
-        </div>
+      {/* Componente de Filtros simplificado (Categoría + Stock) */}
+      <FiltrosCatalogo
+        categoria={categoria}
+        setCategoria={setCategoria}
+        categorias={categorias}
+        filtroStock={filtroStock}
+        setFiltroStock={setFiltroStock}
+      />
 
-        <div className="filter-check">
-          <input type="checkbox" id="switch-stock" checked={soloStock} onChange={(e) => setSoloStock(e.target.checked)}/>
-          <label htmlFor="switch-stock">Mostrar solo con stock disponible</label>
-        </div><br></br>
-      </section>
-
-      {/* Listado o catálogo */}
+      {/* Listado de Productos */}
       {productosFiltrados.length === 0 ? (
-        <div className="no-results">
-          <p>No se encontraron productos que coincidan con los filtros seleccionados.</p>
-        </div>
+        <Alert variant="warning" className="text-center py-4">
+          <h5>No se encontraron productos</h5>
+          <p className="mb-0">Prueba seleccionando otra categoría o cambiando la opción de disponibilidad.</p>
+        </Alert>
       ) : (
-        <div className="product-grid">
+        <Row className="g-3">
           {productosFiltrados.map((prod) => (
-            <TarjetaProducto
-              key={prod.codigo}
-              producto={prod}
-              onAgregarCarrito={onAgregarCarrito}
-            />
+            <Col key={prod.codigo} xs={12} sm={6} md={4} lg={3}>
+              <TarjetaProducto
+                producto={prod}
+                onAgregarCarrito={onAgregarCarrito}
+              />
+            </Col>
           ))}
-        </div>
+        </Row>
       )}
-    </main>
+    </Container>
   );
 }
 
