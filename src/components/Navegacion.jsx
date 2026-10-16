@@ -33,11 +33,6 @@ function Navegacion({ totalCarrito = 0, esAdmin = false, onLogout }) {
               className="btn btn-success btn-sm px-3 text-white fw-bold me-md-2"
             >
               🛒 Carrito
-              {totalCarrito > 0 && (
-                <Badge bg="danger" pill className="ms-1">
-                  {totalCarrito}
-                </Badge>
-              )}
             </Nav.Link>
 
             {/* Si inició sesión como Admin */}
