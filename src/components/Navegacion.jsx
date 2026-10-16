@@ -1,7 +1,7 @@
-import { Container, Nav, Navbar, Badge, Button } from "react-bootstrap";
+import { Container, Nav, Navbar, Button } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
 
-function Navegacion({ totalCarrito = 0, esAdmin = false, onLogout }) {
+function Navegacion({ esAdmin = false, onLogout }) {
   const navigate = useNavigate();
 
   const handleCerrarSesion = () => {
