@@ -1,4 +1,3 @@
-// src/utils/validaciones.spec.jsx
 import { describe, it, expect } from "vitest";
 import {
   validarNombre,
