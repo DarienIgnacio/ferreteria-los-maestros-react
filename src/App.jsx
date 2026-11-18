@@ -1,8 +1,9 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import Navegacion from "./components/Navegacion";
 import PiePagina from "./components/PiePagina";
+import RutaProtegida from "./components/RutaProtegida";
 
 import Inicio from "./pages/Inicio";
 import NoEncontrada from "./pages/NoEncontrada";
@@ -14,26 +15,27 @@ import Nosotros from "./pages/Nosotros";
 import Contacto from "./pages/Contacto";
 import Carrito from "./pages/Carrito";
 import Admin from "./pages/admin/Admin";
+import Ordenes from "./pages/Ordenes";
 
 import { obtenerCarritoGuardado, guardarCarrito } from "./utils/persistenciaCarrito";
 
 function App() {
   const [carrito, setCarrito] = useState(obtenerCarritoGuardado);
 
-  // 1. AÑADIDO: Incluimos setEsAdmin para poder cambiar el estado
-  const [esAdmin, setEsAdmin] = useState(() => {
-    return localStorage.getItem("sesion_admin") === "true";
+  // Sesión persistente desde sessionStorage[cite: 25]
+  const [usuario, setUsuario] = useState(() => {
+    const guardado = sessionStorage.getItem("usuario");
+    return guardado ? JSON.parse(guardado) : null;
   });
 
-  // 2. AÑADIDO: Funciones para activar y desactivar la sesión de Admin
-  const loginAdmin = () => {
-    setEsAdmin(true);
-    localStorage.setItem("sesion_admin", "true");
+  const handleLoginExitoso = (datosUsuario) => {
+    setUsuario(datosUsuario);
   };
 
-  const logoutAdmin = () => {
-    setEsAdmin(false);
-    localStorage.removeItem("sesion_admin");
+  const handleLogout = () => {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("usuario");
+    setUsuario(null);
   };
 
   useEffect(() => {
@@ -78,47 +80,56 @@ function App() {
     setCarrito([]);
   };
 
-  // Calcular el total de productos para la barra de navegación
   const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
-      {/* Pasar props de autenticación y carrito real a la navegación */}
-      <Navegacion 
-        totalCarrito={totalItems} 
-        esAdmin={esAdmin} 
-        onLogout={logoutAdmin} 
+      <Navegacion
+        totalCarrito={totalItems}
+        usuario={usuario}
+        onLogout={handleLogout}
       />
 
       <main className="flex-grow-1">
-        <Routes>          
-          <Route path="/" element={<Inicio onAgregarCarrito={agregarAlCarrito}/>} />
-          <Route path="/productos" element={<Productos onAgregarCarrito={agregarAlCarrito}/>} />
-          <Route path="/productos/:codigo" element={<DetalleProducto onAgregarCarrito={agregarAlCarrito}/>} />
-          <Route path="/login" element={<Login onLoginAdmin={loginAdmin} />} />
-          
-          {/* RUTA PROTEGIDA */}
-          <Route 
-            path="/admin" 
-            element={esAdmin ? <Admin /> : <Navigate to="/login" replace />} 
+        <Routes>
+          <Route path="/" element={<Inicio onAgregarCarrito={agregarAlCarrito} />} />
+          <Route
+            path="/productos"
+            element={<Productos onAgregarCarrito={agregarAlCarrito} usuario={usuario} />}
           />
-          
-          <Route path="/registro" element={<Registro />} />
+          <Route
+            path="/productos/:codigo"
+            element={<DetalleProducto onAgregarCarrito={agregarAlCarrito} />}
+          />
+          <Route path="/login" element={<Login onLoginExitoso={handleLoginExitoso} />} />
+          <Route path="/registro" element={<Registro onLoginExitoso={handleLoginExitoso} />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/contacto" element={<Contacto />} />
-          <Route 
-            path="/carrito" 
+          <Route
+            path="/carrito"
             element={
-              <Carrito 
-                carrito={carrito} 
-                onModificarCantidad={modificarCantidad} 
+              <Carrito
+                carrito={carrito}
+                usuario={usuario}
+                onModificarCantidad={modificarCantidad}
                 onEliminarItem={eliminarItem}
-                onVaciarCarrito={vaciarCarrito} 
+                onVaciarCarrito={vaciarCarrito}
               />
-            } 
+            }
           />
+
+          {/* RUTA PROTEGIDA SOLO PARA ADMIN */}
+          <Route element={<RutaProtegida rolesPermitidos={["ADMIN"]} />}>
+            <Route path="/admin" element={<Admin />} />
+          </Route>
+
+          {/* RUTA PROTEGIDA PARA VENDEDOR Y ADMIN */}
+          <Route element={<RutaProtegida rolesPermitidos={["ADMIN", "VENDEDOR"]} />}>
+            <Route path="/vendedor/ordenes" element={<Ordenes />} />
+          </Route>
+
           <Route path="*" element={<NoEncontrada />} />
-        </Routes>     
+        </Routes>
       </main>
       <PiePagina />
     </div>

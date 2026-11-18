@@ -1,73 +1,61 @@
-import { Card, Button, Badge } from "react-bootstrap"; // <-- Asegúrate de que Card esté aquí
+import { Card, Button, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-function TarjetaProducto({ producto, onAgregarCarrito }) {
-  const formatearPrecio = (valor) => `$${valor.toLocaleString("es-CL")}`;
+export default function TarjetaProducto({ producto, onAgregarCarrito }) {
+  const sinStock = producto.stock <= 0;
 
   return (
     <Card className="h-100 shadow-sm border-0">
-      {/* Imagen*/}
-      <div
-        className="text-center bg-light p-2 rounded-top"
-        style={{
-          height: "180px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Card.Img
-          variant="top"
-          src={producto.imagen || "https://via.placeholder.com/300x200?text=Ferreter%C3%ADa"}
-          alt={producto.nombre}
-          className="img-fluid"
-          style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
-        />
-      </div>
-
-        {/* Estado Stock*/}
+      <Card.Img
+        variant="top"
+        src={producto.imagen || "https://via.placeholder.com/300x200?text=Sin+Imagen"}
+        alt={producto.nombre}
+        style={{ height: "180px", objectFit: "cover" }}
+      />
       <Card.Body className="d-flex flex-column">
-        <div className="mb-2">
-          <Badge bg="secondary" className="me-1">
-            {producto.categoria}
-          </Badge>
-          {producto.stock > 0 && producto.stock <= producto.stockCritico && (
-            <Badge bg="danger">¡Últimas unidades!</Badge>
-          )}
-          {producto.stock === 0 && <Badge bg="dark">Agotado</Badge>}
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <Badge bg="secondary">{producto.categoria}</Badge>
+          <small className="text-muted">Cód: {producto.codigo}</small>
         </div>
 
-         {/* Info producto */}
-        <Card.Title className="h6 text-truncate" title={producto.nombre}>{producto.nombre}</Card.Title>
-        <Card.Text className="small text-muted flex-grow-1 text-truncate-2">{producto.descripcion}</Card.Text>
-        <div className="my-2 fw-bold text-primary fs-5">{formatearPrecio(producto.precio)}</div>
+        <Card.Title className="h6 fw-bold">{producto.nombre}</Card.Title>
+        <Card.Text className="text-muted small flex-grow-1">
+          {producto.descripcion}
+        </Card.Text>
 
-          {/* BOTONES */}
-        
-        {/* Boton detalle */}
-        <div className="d-grid gap-2">
-          <Button
-            as={Link}
-            to={`/productos/${producto.codigo}`}
-            variant="outline-secondary"
-            size="sm"
-          >
-            Ver Detalle
-          </Button>
-          
-          {/* Boton agregar (con/sin stock)*/}
-          <Button
-            variant={producto.stock === 0 ? "secondary" : "primary"}
-            size="sm"
-            disabled={producto.stock === 0}
-            onClick={() => onAgregarCarrito(producto)}
-          >
-            {producto.stock === 0 ? "Sin Stock" : "Añadir al Carrito"}
-          </Button>
+        <div className="mt-2">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <span className="h5 mb-0 text-primary fw-bold">
+              ${producto.precio?.toLocaleString("es-CL")}
+            </span>
+            <Badge bg={sinStock ? "danger" : "success"}>
+              {sinStock ? "Agotado" : `Stock: ${producto.stock}`}
+            </Badge>
+          </div>
+
+          <div className="d-grid gap-2">
+            <Button
+              as={Link}
+              to={`/productos/${producto.id}`}
+              variant="outline-dark"
+              size="sm"
+            >
+              Ver Detalle
+            </Button>
+
+            {onAgregarCarrito && (
+              <Button
+                variant="success"
+                size="sm"
+                disabled={sinStock}
+                onClick={() => onAgregarCarrito(producto)}
+              >
+                {sinStock ? "Sin Stock" : "🛒 Agregar al Carrito"}
+              </Button>
+            )}
+          </div>
         </div>
       </Card.Body>
     </Card>
   );
 }
-
-export default TarjetaProducto;

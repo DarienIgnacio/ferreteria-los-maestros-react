@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, Form, Button, Row, Col, Alert } from "react-bootstrap";
 
 export default function FormularioProducto({
+  categorias = [],
   productoEditando,
   onGuardar,
   onCancelarEdicion,
@@ -9,7 +10,7 @@ export default function FormularioProducto({
   const estadoInicial = {
     codigo: "",
     nombre: "",
-    categoria: "",
+    categoriaId: "",
     precio: "",
     stock: "",
     imagen: "",
@@ -19,40 +20,56 @@ export default function FormularioProducto({
   const [formulario, setFormulario] = useState(estadoInicial);
   const [error, setError] = useState("");
 
-  // Sincroniza el formulario cuando se selecciona un producto para editar
   useEffect(() => {
     if (productoEditando) {
-      setFormulario(productoEditando);
+      setFormulario({
+        ...productoEditando,
+        categoriaId: productoEditando.categoria?.id || "",
+      });
       setError("");
     } else {
-      setFormulario(estadoInicial);
+      setFormulario({
+        ...estadoInicial,
+        categoriaId: categorias[0]?.id || "",
+      });
     }
-  }, [productoEditando]);
+  }, [productoEditando, categorias]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormulario({
       ...formulario,
-      [name]: name === "precio" || name === "stock" ? Number(value) : value,
+      [name]:
+        name === "precio" || name === "stock" || name === "categoriaId"
+          ? Number(value)
+          : value,
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!formulario.codigo.trim() || !formulario.nombre.trim()) {
-      setError("El código y el nombre del producto son obligatorios.");
+    if (!formulario.codigo.trim() || !formulario.nombre.trim() || !formulario.categoriaId) {
+      setError("Código, nombre y categoría son obligatorios.");
       return;
     }
-
     if (formulario.precio <= 0 || formulario.stock < 0) {
       setError("El precio debe ser mayor a 0 y el stock no puede ser negativo.");
       return;
     }
 
     setError("");
-    onGuardar(formulario);
-    setFormulario(estadoInicial);
+    const payload = {
+      codigo: formulario.codigo,
+      nombre: formulario.nombre,
+      descripcion: formulario.descripcion,
+      precio: Number(formulario.precio),
+      stock: Number(formulario.stock),
+      imagen: formulario.imagen,
+      categoria: { id: Number(formulario.categoriaId) },
+    };
+
+    onGuardar(payload);
+    setFormulario({ ...estadoInicial, categoriaId: categorias[0]?.id || "" });
   };
 
   return (
@@ -66,7 +83,7 @@ export default function FormularioProducto({
         <Form onSubmit={handleSubmit}>
           <Row className="g-3">
             <Col md={4}>
-              <Form.Group controlId="formCodigo">
+              <Form.Group>
                 <Form.Label>Código</Form.Label>
                 <Form.Control
                   type="text"
@@ -74,19 +91,18 @@ export default function FormularioProducto({
                   placeholder="Ej: TAL-001"
                   value={formulario.codigo}
                   onChange={handleChange}
-                  disabled={!!productoEditando} // Bloquea el código al editar
+                  disabled={!!productoEditando}
                   required
                 />
               </Form.Group>
             </Col>
 
             <Col md={8}>
-              <Form.Group controlId="formNombre">
+              <Form.Group>
                 <Form.Label>Nombre del Producto</Form.Label>
                 <Form.Control
                   type="text"
                   name="nombre"
-                  placeholder="Ej: Taladro Percutor 650W"
                   value={formulario.nombre}
                   onChange={handleChange}
                   required
@@ -95,21 +111,26 @@ export default function FormularioProducto({
             </Col>
 
             <Col md={4}>
-              <Form.Group controlId="formCategoria">
+              <Form.Group>
                 <Form.Label>Categoría</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="categoria"
-                  placeholder="Ej: Herramientas Eléctricas"
-                  value={formulario.categoria}
+                <Form.Select
+                  name="categoriaId"
+                  value={formulario.categoriaId}
                   onChange={handleChange}
                   required
-                />
+                >
+                  <option value="">Selecciona categoría...</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.nombre}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
 
             <Col md={4}>
-              <Form.Group controlId="formPrecio">
+              <Form.Group>
                 <Form.Label>Precio ($)</Form.Label>
                 <Form.Control
                   type="number"
@@ -123,7 +144,7 @@ export default function FormularioProducto({
             </Col>
 
             <Col md={4}>
-              <Form.Group controlId="formStock">
+              <Form.Group>
                 <Form.Label>Stock Disponible</Form.Label>
                 <Form.Control
                   type="number"
@@ -136,14 +157,26 @@ export default function FormularioProducto({
               </Form.Group>
             </Col>
 
-            <Col md={12}>
-              <Form.Group controlId="formImagen">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Descripción</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="descripcion"
+                  value={formulario.descripcion || ""}
+                  onChange={handleChange}
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group>
                 <Form.Label>URL de Imagen</Form.Label>
                 <Form.Control
                   type="text"
                   name="imagen"
                   placeholder="https://..."
-                  value={formulario.imagen}
+                  value={formulario.imagen || ""}
                   onChange={handleChange}
                 />
               </Form.Group>
@@ -154,7 +187,6 @@ export default function FormularioProducto({
             <Button type="submit" variant={productoEditando ? "warning" : "success"}>
               {productoEditando ? "Guardar Cambios" : "Crear Producto"}
             </Button>
-
             {productoEditando && (
               <Button variant="secondary" onClick={onCancelarEdicion}>
                 Cancelar
