@@ -1,177 +1,130 @@
 import { useState } from "react";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  validarNombre,
-  validarRun,
-  validarCorreo,
-  validarClave,
-  validarConfirmacionClave
-} from "../utils/validaciones";
-import { registrarUsuario } from "../utils/persistenciaUsuarios";
+import { useNavigate, Link } from "react-router-dom";
+import { registrarClienteApi } from "../services/authService";
 
-const datosIniciales = {
-  nombre: "",
-  run: "",
-  correo: "",
-  clave: "",
-  confirmarClave: ""
-};
-
-function Registro() {
-  const [datos, setDatos] = useState(datosIniciales);
-  const [errores, setErrores] = useState({});
-  const [errorServer, setErrorServer] = useState("");
-  const [mensajeExito, setMensajeExito] = useState("");
+export default function Registro({ onLoginExitoso }) {
+  const [nombre, setNombre] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmarPassword, setConfirmarPassword] = useState("");
+  const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
 
-  const cambiar = (e) => {
-    const { name, value } = e.target;
-    setDatos({ ...datos, [name]: value });
-    setErrorServer("");
-  };
-
-  const ejecutarValidacion = () => {
-    const nuevosErrores = {};
-    const errNombre = validarNombre(datos.nombre);
-    const errRun = validarRun(datos.run);
-    const errCorreo = validarCorreo(datos.correo);
-    const errClave = validarClave(datos.clave);
-    const errConfirmar = validarConfirmacionClave(datos.clave, datos.confirmarClave);
-
-    if (errNombre) nuevosErrores.nombre = errNombre;
-    if (errRun) nuevosErrores.run = errRun;
-    if (errCorreo) nuevosErrores.correo = errCorreo;
-    if (errClave) nuevosErrores.clave = errClave;
-    if (errConfirmar) nuevosErrores.confirmarClave = errConfirmar;
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  };
-
-  const enviar = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!ejecutarValidacion()) return;
+    setError("");
 
-    // Registrar en localStorage
-    const resultado = registrarUsuario({
-      nombre: datos.nombre.trim(),
-      run: datos.run.trim(),
-      correo: datos.correo.trim(),
-      clave: datos.clave
-    });
-
-    if (!resultado.exito) {
-      setErrorServer(resultado.mensaje);
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
 
-    setMensajeExito("¡Cuenta creada exitosamente! Redirigiendo al inicio de sesión...");
-    setTimeout(() => {
-      navigate("/login");
-    }, 1500);
+    if (password !== confirmarPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    setCargando(true);
+    try {
+      const sesion = await registrarClienteApi({ nombre, correo, password });
+
+      const datosUsuario = {
+        nombre: sesion.nombre,
+        correo: sesion.correo,
+        rol: sesion.rol, // El backend asigna "CLIENTE" automáticamente
+      };
+
+      sessionStorage.setItem("token", sesion.token);
+      sessionStorage.setItem("usuario", JSON.stringify(datosUsuario));
+
+      if (onLoginExitoso) {
+        onLoginExitoso(datosUsuario);
+      }
+
+      alert(`¡Bienvenido a Ferretería Los Maestros, ${sesion.nombre}!`);
+      navigate("/productos");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
-    <Container className="py-5 d-flex justify-content-center">
-      <Card className="shadow-sm border-0 p-3" style={{ maxWidth: "500px", width: "100%" }}>
-        <Card.Body>
-          <h2 className="text-center fw-bold text-dark mb-4">Crear Cuenta</h2>
+    <Container className="my-5" style={{ maxWidth: "480px" }}>
+      <Card className="shadow-sm border-0">
+        <Card.Body className="p-4">
+          <h3 className="text-center mb-2">Crear Cuenta</h3>
+          <p className="text-center text-muted mb-4">
+            Regístrate como cliente para realizar tus compras
+          </p>
 
-          {mensajeExito && <Alert variant="success">{mensajeExito}</Alert>}
-          {errorServer && <Alert variant="danger">{errorServer}</Alert>}
+          {error && <Alert variant="danger">{error}</Alert>}
 
-          <Form onSubmit={enviar} noValidate>
+          <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3" controlId="regNombre">
               <Form.Label>Nombre Completo</Form.Label>
               <Form.Control
                 type="text"
-                name="nombre"
-                value={datos.nombre}
-                onChange={cambiar}
-                isInvalid={Boolean(errores.nombre)}
-                placeholder="Juan Pérez"
+                placeholder="Ej: Carlos Soto"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                required
               />
-              <Form.Control.Feedback type="invalid">
-                {errores.nombre}
-              </Form.Control.Feedback>
-            </Form.Group>
-
-            <Form.Group className="mb-3" controlId="regRun">
-              <Form.Label>RUN / RUT</Form.Label>
-              <Form.Control
-                type="text"
-                name="run"
-                value={datos.run}
-                onChange={cambiar}
-                isInvalid={Boolean(errores.run)}
-                placeholder="12345678-K"
-              />
-              <Form.Control.Feedback type="invalid">
-                {errores.run}
-              </Form.Control.Feedback>
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="regCorreo">
               <Form.Label>Correo Electrónico</Form.Label>
               <Form.Control
                 type="email"
-                name="correo"
-                value={datos.correo}
-                onChange={cambiar}
-                isInvalid={Boolean(errores.correo)}
-                placeholder="correo@duoc.cl"
+                placeholder="carlos@ejemplo.cl"
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value)}
+                required
               />
-              <Form.Control.Feedback type="invalid">
-                {errores.correo}
-              </Form.Control.Feedback>
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="regClave">
+            <Form.Group className="mb-3" controlId="regPassword">
               <Form.Label>Contraseña</Form.Label>
               <Form.Control
                 type="password"
-                name="clave"
-                value={datos.clave}
-                onChange={cambiar}
-                isInvalid={Boolean(errores.clave)}
                 placeholder="Mínimo 6 caracteres"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
-              <Form.Control.Feedback type="invalid">
-                {errores.clave}
-              </Form.Control.Feedback>
             </Form.Group>
 
-            <Form.Group className="mb-4" controlId="regConfirmarClave">
+            <Form.Group className="mb-4" controlId="regConfirmar">
               <Form.Label>Confirmar Contraseña</Form.Label>
               <Form.Control
                 type="password"
-                name="confirmarClave"
-                value={datos.confirmarClave}
-                onChange={cambiar}
-                isInvalid={Boolean(errores.confirmarClave)}
-                placeholder="Repita su contraseña"
+                placeholder="Repite tu contraseña"
+                value={confirmarPassword}
+                onChange={(e) => setConfirmarPassword(e.target.value)}
+                required
               />
-              <Form.Control.Feedback type="invalid">
-                {errores.confirmarClave}
-              </Form.Control.Feedback>
             </Form.Group>
 
-            <Button type="submit" variant="success" className="w-100 mb-3">
-              Registrar Cuenta
+            <Button
+              type="submit"
+              variant="success"
+              className="w-100"
+              disabled={cargando}
+            >
+              {cargando ? "Registrando..." : "Registrarse"}
             </Button>
-
-            <div className="text-center small">
-              ¿Ya tienes una cuenta?{" "}
-              <Link to="/login" className="text-decoration-none fw-bold">
-                Inicia sesión aquí
-              </Link>
-            </div>
           </Form>
+
+          <div className="text-center mt-3">
+            <small>
+              ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>
+            </small>
+          </div>
         </Card.Body>
       </Card>
     </Container>
   );
 }
-
-export default Registro;

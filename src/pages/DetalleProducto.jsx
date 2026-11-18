@@ -1,68 +1,105 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Container, Row, Col, Badge, Button, Card } from "react-bootstrap";
-import { obtenerProductos } from "../utils/persistenciaProductos";
+import { Container, Row, Col, Card, Badge, Button, Spinner, Alert } from "react-bootstrap";
+import { buscarProducto } from "../services/tiendaService";
 
-function DetalleProducto({ onAgregarCarrito }) {
-  const { codigo } = useParams();
-  const productos = obtenerProductos();
-  const producto = productos.find((p) => p.codigo === codigo);
+export default function DetalleProducto({ onAgregarCarrito, usuario }) {
+  const { codigo } = useParams(); // Recibe el ID numérico desde /productos/:codigo
+  const [producto, setProducto] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!producto) {
+  useEffect(() => {
+    async function cargarDetalle() {
+      try {
+        setError("");
+        const data = await buscarProducto(codigo);
+        setProducto(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setCargando(false);
+      }
+    }
+    cargarDetalle();
+  }, [codigo]);
+
+  if (cargando) {
     return (
       <Container className="py-5 text-center">
-        <h2>Producto no encontrado</h2>
-        <p className="text-muted">El código indicado no existe en nuestro catálogo.</p>
-        <Button as={Link} to="/productos" variant="warning">Volver al Catálogo</Button>
+        <Spinner animation="border" variant="primary" />
+        <p className="mt-2 text-muted">Cargando detalle del producto...</p>
       </Container>
     );
   }
 
-  const rutaImagen = producto.imagen
-    ? producto.imagen.startsWith("/")
-      ? producto.imagen
-      : `/${producto.imagen}`
-    : "https://via.placeholder.com/400x300?text=Ferreter%C3%ADa";
+  if (error || !producto) {
+    return (
+      <Container className="py-5">
+        <Alert variant="danger">
+          {error || "No se encontró el producto solicitado."}
+        </Alert>
+        <Button as={Link} to="/productos" variant="secondary">
+          ← Volver al Catálogo
+        </Button>
+      </Container>
+    );
+  }
+
+  const sinStock = producto.stock <= 0;
+  const esVendedor = usuario?.rol === "VENDEDOR";
 
   return (
-    <Container className="py-5">
+    <Container className="py-4">
+      <Button as={Link} to="/productos" variant="outline-secondary" size="sm" className="mb-4">
+        ← Volver al Catálogo
+      </Button>
+
       <Card className="shadow-sm border-0">
         <Card.Body className="p-4">
           <Row className="g-4 align-items-center">
-
-            <Col xs={12} md={6}>
+            <Col md={5}>
               <img
-                src={rutaImagen}
+                src={producto.imagen || "https://via.placeholder.com/500x400?text=Sin+Imagen"}
                 alt={producto.nombre}
-                className="img-fluid rounded shadow-sm w-100"
-                style={{ maxHeight: "300px", width: "auto", objectFit: "contain" }}/>
+                className="img-fluid rounded border w-100"
+                style={{ maxHeight: "380px", objectFit: "cover" }}
+              />
             </Col>
 
-            <Col xs={12} md={6}>
-              <Badge bg="secondary" className="mb-2">{producto.categoria}</Badge>
-              <h1 className="h2 fw-bold text-dark">{producto.nombre}</h1>
-              <p className="text-muted small mb-3">Código SKU: {producto.codigo}</p>
-
-              <p className="text-secondary">{producto.descripcion}</p>
-
-              <div className="mb-3">
-                <span className="h3 fw-bold text-primary">${producto.precio.toLocaleString("es-CL")}</span>
+            <Col md={7}>
+              <div className="d-flex gap-2 align-items-center mb-2">
+                <Badge bg="secondary">{producto.categoria?.nombre || "General"}</Badge>
+                <span className="text-muted small">Código: {producto.codigo}</span>
               </div>
+
+              <h1 className="h2 fw-bold text-dark mb-3">{producto.nombre}</h1>
+
+              <h2 className="h3 text-primary fw-bold mb-3">
+                ${producto.precio?.toLocaleString("es-CL")}
+              </h2>
+
+              <p className="text-muted mb-4">
+                {producto.descripcion || "Sin descripción detallada disponible."}
+              </p>
 
               <div className="mb-4">
-                <strong>Stock disponible:</strong>{" "}
-                {producto.stock > 0 ? (
-                  <span className="text-success fw-bold">{producto.stock} unidades</span>
-                ) : (
-                  <span className="text-danger fw-bold">Agotado</span>
-                )}
+                <strong>Disponibilidad: </strong>
+                <Badge bg={sinStock ? "danger" : "success"} className="fs-6">
+                  {sinStock ? "Agotado" : `${producto.stock} unidades en stock`}
+                </Badge>
               </div>
 
-              <div className="d-flex gap-2">
-                <Button variant="primary" size="lg" disabled={producto.stock === 0} onClick={() => onAgregarCarrito(producto)}>
-                  Añadir al Carrito
+              {!esVendedor && onAgregarCarrito && (
+                <Button
+                  variant="success"
+                  size="lg"
+                  disabled={sinStock}
+                  onClick={() => onAgregarCarrito(producto)}
+                >
+                  {sinStock ? "Producto Agotado" : "🛒 Agregar al Carrito"}
                 </Button>
-                <Button as={Link} to="/productos" variant="outline-secondary" size="lg">Volver al Catálogo</Button>
-              </div>
+              )}
             </Col>
           </Row>
         </Card.Body>
@@ -70,5 +107,3 @@ function DetalleProducto({ onAgregarCarrito }) {
     </Container>
   );
 }
-
-export default DetalleProducto;
