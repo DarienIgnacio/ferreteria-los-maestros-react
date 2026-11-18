@@ -6,7 +6,6 @@ export default function ResumenCompra({
   onVaciarCarrito,
   onFinalizarCompra,
 }) {
-  // Cálculo desglosado asumiendo que los precios de la tienda incluyen IVA (19%)
   const neto = Math.round(totalPagar / 1.19);
   const iva = totalPagar - neto;
 
